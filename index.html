@@ -440,7 +440,6 @@ html.a11y-still *,html.a11y-still *::before,html.a11y-still *::after{animation:n
    The cover wall fills itself from the Spotify playlist (PLAYLIST), through /api/playlist on Netlify.
    CREDITS: extra credit lines per song, keyed by the Spotify track id (the part after /track/ in the song link).
      Songs without an entry show "Production: Ros-e".
-   EXTRA: songs that are not on Spotify (YouTube only). They join the wall after the playlist songs.
    VIDEOS: YouTube ids shown as cards in the Videos section. */
 var CONTACT={phone:'+972509150047',phoneShown:'+972-50-915-0047',email:'unslnt.audio@gmail.com',
  wa:'Hi Tom, I’d like to talk about producing a song.'};
@@ -448,10 +447,6 @@ var PLAYLIST='1mg0TvIUJAOUPh5dPvkyiu';
 var CREDITS={
  /* '4uLU6hMCjMI75M1A2tKUQC': [['Production','Ros-e'],['Arrangement','Ros-e'],['Mix','Name'],['Year','2025']], */
 };
-var EXTRA=[
- {title:'Childhood Song',artist:'Noa Kirel',yt:'anj3M--m2ts',credits:[['Music and production','Ros-e'],['From','Kfula 5, HOT VOD Young'],['Length','3:08']]},
- {title:'You',artist:'Kfula 5',yt:'cltivBGwDBA',credits:[['Music and production','Ros-e'],['From','Kfula 5, HOT VOD Young'],['Length','2:40']]}
-];
 var VIDEOS=[
  {id:'anj3M--m2ts',title:'Childhood Song',sub:'Noa Kirel · Kfula 5',cr:'3:08'},
  {id:'cltivBGwDBA',title:'You',sub:'Kfula 5',cr:'2:40'}
@@ -566,7 +561,6 @@ function sampleCover(i){var c=d.createElement('canvas');c.width=c.height=480;var
  if(i%3===0){x.beginPath();x.arc(240,240,120,0,7);x.fill()}else if(i%3===1){for(var s=0;s<6;s++)x.fillRect(0,40+s*80,480,22)}else{x.save();x.translate(240,240);x.rotate(.6);x.fillRect(-150,-150,300,300);x.restore()}
  return c.toDataURL('image/jpeg',.82)}
 function samples(){var a=[];for(var i=0;i<14;i++)a.push({title:'Song title '+('0'+(i+1)).slice(-2),artist:'Artist name',credits:[['Production','Ros-e']],cover:sampleCover(i),sample:true});return a}
-function ytCover(id){return 'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg'}
 function mmss(ms){if(!ms)return '';var s=Math.round(ms/1000);return Math.floor(s/60)+':'+('0'+s%60).slice(-2)}
 
 /* build the drifting columns: each column starts at a different song so neighbours differ */
@@ -595,14 +589,25 @@ var introDone=false,t0=Date.now();
 function reveal(){var wait=Math.max(0,(reduce||root.classList.contains('nogl')?300:2100)-(Date.now()-t0));setTimeout(function(){wall.classList.add('shown')},wait)}
 var rz;addEventListener('resize',function(){clearTimeout(rz);rz=setTimeout(function(){var L=layout();if(L.t+'x'+L.rows+'x'+L.per!==lastKey)build()},200)});
 /* a cover that fails to load gets a stand-in */
-cols.addEventListener('error',function(e){var t=e.target;if(t.tagName==='IMG'){var i=+t.parentNode.dataset.i;t.src=SONGS[i].cover=sampleCover(i)}},true);
+cols.addEventListener('error',function(e){var t=e.target;if(t.tagName!=='IMG')return;var i=+t.parentNode.dataset.i;
+ /* the 640px cover is missing for a few releases: fall back to the 300px one, then to a stand-in */
+ if(/ab67616d0000b273/.test(t.src)){t.src=t.src.replace('ab67616d0000b273','ab67616d00001e02');return}
+ t.src=SONGS[i].cover=sampleCover(i)},true);
 
 function useList(list){SONGS=list;groupCovers();build()}
+/* sample covers only in local previews; the live site shows nothing but the playlist */
+var demo=location.protocol==='file:'||/localhost|127\.0\.0\.1|claude/.test(location.hostname);
+var bigCover=function(u){return String(u||'').replace(/ab67616d0000(1e02|4851)/,'ab67616d0000b273')};
 fetch('/api/playlist').then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(j){
  if(!j.tracks||!j.tracks.length)throw new Error(j.error||'empty playlist');
- useList(j.tracks.map(function(t){var cr=CREDITS[t.id]||[['Production','Ros-e']];if(t.duration&&!CREDITS[t.id])cr=cr.concat([['Length',mmss(t.duration)]]);
-  return {title:t.title,artist:t.artist,spotify:t.id,cover:t.cover||'',credits:cr}}).concat(EXTRA.map(function(e){return Object.assign({cover:ytCover(e.yt)},e)})))
-}).catch(function(err){console.warn('Spotify playlist not loaded, showing sample covers',err);useList(EXTRA.map(function(e,i){return Object.assign({cover:sampleCover(i+5),sample:true},e)}).concat(samples()))});
+ var list=j.tracks.map(function(t){var cr=CREDITS[t.id]||[['Production','Ros-e']];if(t.duration&&!CREDITS[t.id])cr=cr.concat([['Length',mmss(t.duration)]]);
+  return {title:t.title,artist:t.artist,spotify:t.id,cover:bigCover(t.cover),credits:cr}});
+ /* a song that came without a cover gets it straight from Spotify's oEmbed in the browser */
+ return Promise.all(list.filter(function(s){return !s.cover}).map(function(s){
+  return fetch('https://open.spotify.com/oembed?url='+encodeURIComponent('https://open.spotify.com/track/'+s.spotify)).then(function(r){return r.ok?r.json():null}).then(function(o){if(o&&o.thumbnail_url)s.cover=bigCover(o.thumbnail_url)}).catch(function(){})
+ })).then(function(){useList(list.filter(function(s){return s.cover}))})
+}).catch(function(err){console.warn('Spotify playlist not loaded',err);
+ if(demo)useList(samples());else reveal()});
 
 /* Spotify's iFrame API lets the page start the song right after the click; a plain embed is the fallback */
 function spotifyApi(cb){

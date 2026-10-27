@@ -25,7 +25,7 @@ function bestImage(o: any): string {
   let best = "", size = -1
   ;(function walk(x: any) {
     if (!x || typeof x !== "object") return
-    if (typeof x.url === "string" && /i\.scdn\.co\/image\//.test(x.url)) {
+    if (typeof x.url === "string" && /\/image\/ab67/.test(x.url)) {
       const w = x.width || x.maxWidth || 0
       if (w > size) { size = w; best = x.url }
     }
@@ -36,6 +36,11 @@ function bestImage(o: any): string {
 
 // the 640px version of a Spotify album image
 const big = (u: string) => u.replace(/ab67616d0000(1e02|4851)/, "ab67616d0000b273")
+
+// run jobs a few at a time so Spotify does not refuse a burst of requests
+async function inBatches<T>(items: T[], size: number, job: (t: T) => Promise<void>) {
+  for (let i = 0; i < items.length; i += size) await Promise.all(items.slice(i, i + size).map(job))
+}
 
 export default async () => {
   const tracks = new Map<string, Track>()
@@ -67,7 +72,7 @@ export default async () => {
   }
 
   // 3. fill in what is missing from each song's own embed page, then oEmbed
-  await Promise.all([...tracks.values()].map(async t => {
+  await inBatches([...tracks.values()], 4, async t => {
     if (!t.title || !t.artist || !t.cover) {
       const d = nextData(await page(`https://open.spotify.com/embed/track/${t.id}`))
       const e = d?.props?.pageProps?.state?.data?.entity
@@ -84,9 +89,9 @@ export default async () => {
         if (r.ok) { const j = await r.json(); add(t.id, { title: j.title, cover: j.thumbnail_url }) }
       } catch {}
     }
-  }))
+  })
 
-  const list = [...tracks.values()].filter(t => t.title).map(t => ({ ...t, cover: big(t.cover) }))
+  const list = [...tracks.values()].filter(t => t.title).map(t => ({ ...t, cover: t.cover ? big(t.cover) : "" }))
   if (!list.length) return Response.json({ tracks: [], error: "could not read the playlist from Spotify" }, { status: 502 })
   return Response.json({ tracks: list }, {
     headers: {
