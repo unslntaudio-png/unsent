@@ -102,10 +102,10 @@ nav.top .wrap{display:flex;align-items:center;justify-content:space-between;heig
 .wall.frozen .col,.cols:hover .col{animation-play-state:paused}
 .tile{position:relative;display:block;flex:none;width:var(--t,300px);height:var(--t,300px);margin:0;padding:0;border:0;border-radius:0;overflow:hidden;background:#26262a;cursor:pointer;transition:transform .6s var(--ease),filter .4s,box-shadow .6s}
 .tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.cols:hover .tile{filter:brightness(.62) saturate(.85)}
+.cols:has(.tile:hover) .tile:not(:hover){filter:brightness(.55) saturate(.85)}
 .cols .tile:hover,.cols .tile:focus-visible{filter:none;transform:scale(1.04);z-index:2;box-shadow:0 30px 60px -18px rgba(0,0,0,.7);border-radius:6px}
 .tile:focus-visible{outline:3px solid #fff;outline-offset:-3px}
-.wall:after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(52% 40% at 50% 48%,rgba(0,0,0,.58),rgba(0,0,0,.22) 70%,rgba(0,0,0,.1)),linear-gradient(rgba(0,0,0,.45),transparent 22%,transparent 72%,rgba(0,0,0,.55))}
+/* no shade over the wall; covers only dim while another one is hovered */
 .pick{position:absolute;left:0;right:0;bottom:calc(30px + env(safe-area-inset-bottom,0px));z-index:2;margin:0;text-align:center;color:#fff;font-size:16px;font-weight:500;letter-spacing:-.01em;pointer-events:none;text-shadow:0 2px 12px rgba(0,0,0,.5)}
 .wall .flat{position:absolute;left:50%;top:48%;translate:-50% -50%;width:min(66%,760px);color:#fff;z-index:3;display:none;pointer-events:none;filter:drop-shadow(0 20px 40px rgba(0,0,0,.4))}
 .nogl .wall .flat{display:block}
@@ -114,7 +114,7 @@ nav.top .wrap{display:flex;align-items:center;justify-content:space-between;heig
 body.playing #gl{z-index:120;opacity:1!important;visibility:visible!important}
 /* nav sits on the wall in white until the page scrolls */
 nav.top:not(.stuck){background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none}
-nav.top:not(.stuck) .links a{color:rgba(255,255,255,.88)}
+nav.top:not(.stuck) .links a{color:#fff;text-shadow:0 1px 10px rgba(0,0,0,.45)}
 nav.top:not(.stuck) .links a:hover{color:#fff}
 nav.top:not(.stuck) .links a.talk{background:#fff;color:var(--ink)}
 nav.top:not(.stuck) .brand{opacity:0;pointer-events:none}
