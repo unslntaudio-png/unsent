@@ -59,11 +59,11 @@ img{max-width:100%}
 /* ---- the wall: fixed behind everything ---- */
 .wall{position:fixed;inset:0;z-index:0;overflow:hidden;background:#000}
 .cols{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
-.col{display:flex;flex:none;height:25%;width:max-content;animation:drift var(--d,70s) linear infinite;will-change:transform;backface-visibility:hidden;contain:layout paint}
+.col{display:flex;flex:none;height:var(--t,25vh);width:max-content;animation:drift var(--d,70s) linear infinite;will-change:transform;backface-visibility:hidden;contain:layout paint}
 .col:nth-child(even){animation-direction:reverse}
 @keyframes drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
 .wall.frozen .col{animation-play-state:paused}
-.tile{position:relative;display:block;flex:none;height:100%;width:auto;aspect-ratio:1;margin:0;padding:0;border:0;border-radius:0;overflow:hidden;background:#111;cursor:pointer;transition:transform .6s var(--ease),filter .4s}
+.tile{position:relative;display:block;flex:none;width:var(--t,25vh);height:var(--t,25vh);margin:0;padding:0;border:0;border-radius:0;overflow:hidden;background:#111;cursor:pointer;transition:transform .6s var(--ease),filter .4s}
 .tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 /* covers are never dimmed; with a mouse the wall only pauses so a cover is easy to click */
 @media (hover:hover) and (pointer:fine){
@@ -355,7 +355,7 @@ nav.top a.talk,.cta a.wa,.np-svc button[aria-pressed=true]{background:rgba(255,2
     <p>His sound comes out of RnB and electronic music: programmed beats next to real players, warm low end, and room for the vocal to lead. He works with artists from the first voice memo to the finished record.</p>
     <p>He also runs <a href="https://unslnt.com/" target="_blank" rel="noopener">UNSLNT.</a>, a studio that writes original music for TV and advertising.</p>
    </div></div>
-   <div class="b-face rvl"><img src="ros-e-circle.webp" width="896" height="1056" alt="Tom Rosenberg wearing headphones behind the decks" loading="lazy"></div>
+   <div class="b-face rvl"><img src="ros-e-circle.png" width="720" height="848" alt="Tom Rosenberg wearing headphones behind the decks" loading="lazy"></div>
    <div class="shell b-svc rvl"><div class="core">
     <div id="acc">
      <div class="ai"><button type="button" aria-expanded="false" aria-controls="s1">Production<span class="plus" aria-hidden="true"></span></button><div class="body" id="s1"><div><p>Building the track around the song: beats, sounds, live instruments and the direction of the record.</p></div></div></div>
@@ -513,14 +513,16 @@ function build(){
  rows.forEach(function(row,r){
   var one=function(hidden){return row.map(function(c,q){var cv=COVERS[c],s=SONGS[cv.i];return '<button class="tile" type="button" data-i="'+cv.i+'" data-c="'+c+'" style="--dl:'+((r*.11+q*.07)%.5).toFixed(2)+'s"'+(hidden?' tabindex="-1" aria-hidden="true"':' aria-label="Play '+esc(s.title)+' by '+esc(s.artist)+'"')+'><img src="'+esc(useSmall?cv.small:cv.cover)+'" alt="" decoding="async"></button>'}).join('')};
   h+='<div class="col" style="--d:'+(row.length*9+r%3*7)+'s;animation-delay:-'+(r*5.7)+'s">'+one(false)+one(true)+'</div>'});
- cols.innerHTML=h;
+ cols.innerHTML=h;sizeTiles();
  cols.querySelectorAll('img').forEach(function(im){if(im.complete&&im.naturalWidth)im.parentNode.classList.add('ok');else im.addEventListener('load',function(){im.parentNode.classList.add('ok')},{once:true})});
  reveal()}
 /* entrance: the logo lands on black first; each cover fades in right after, as soon as its image is ready */
 var t0=Date.now();
 function reveal(){var wait=Math.max(0,(reduce||root.classList.contains('nogl')?200:1700)-(Date.now()-t0));setTimeout(function(){wall.classList.add('shown');d.body.classList.add('shown-pick')},wait)}
-/* rebuild only when the width changes or the height changes a lot; a phone's toolbar sliding in and out is absorbed by CSS */
-var rz,lastW=innerWidth,lastH=innerHeight;addEventListener('resize',function(){clearTimeout(rz);rz=setTimeout(function(){if(innerWidth!==lastW||Math.abs(innerHeight-lastH)>160){lastW=innerWidth;lastH=innerHeight;build()}},200)});
+/* tiles are a quarter of the wall's height, set in pixels (Safari does not size a square from a percentage height) */
+function sizeTiles(){cols.style.setProperty('--t',((wall.clientHeight||innerHeight)/4)+'px')}
+/* rebuild only when the width changes or the height changes a lot; a phone's toolbar sliding in and out only resizes the tiles */
+var rz,lastW=innerWidth,lastH=innerHeight;addEventListener('resize',function(){sizeTiles();clearTimeout(rz);rz=setTimeout(function(){if(innerWidth!==lastW||Math.abs(innerHeight-lastH)>160){lastW=innerWidth;lastH=innerHeight;build()}},200)});
 cols.addEventListener('error',function(e){var t=e.target;if(t.tagName!=='IMG')return;var i=+t.parentNode.dataset.i;
  /* a missing size falls back to the 300px version, then to a stand-in */
  if(/ab67616d0000(b273|4851)/.test(t.src)){t.src=t.src.replace(/ab67616d0000(b273|4851)/,'ab67616d00001e02');return}
