@@ -1,5 +1,6 @@
 [build]
   publish = "."
+  command = "node scripts/build-playlist.mjs"
 
 [functions]
   directory = "netlify/functions"
@@ -8,6 +9,11 @@
   for = "/*.webp"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/covers/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
 
 [[headers]]
   for = "/vendor/*"
