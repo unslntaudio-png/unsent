@@ -92,9 +92,10 @@ nav.top .wrap{display:flex;align-items:center;justify-content:space-between;heig
 
 /* hero: a wall of cover art drifting in tilted columns, with the white 3D logo floating over it */
 .wall{position:relative;height:100vh;height:100dvh;min-height:560px;overflow:hidden;background:#000;isolation:isolate}
-.wall:not(.shown) .tile,.wall:not(.shown) .pick{opacity:0}
-.wall.shown .tile{transition:opacity 1.4s ease var(--dl,0s),transform .6s var(--ease),filter .4s,box-shadow .6s}
-.wall.shown .pick{transition:opacity 1s ease 1.2s}
+.wall:not(.shown) .tile,.wall:not(.shown) .pick,.wall .tile:not(.ok){opacity:0}
+.wall.shown .tile{transition:opacity .9s ease var(--dl,0s),transform .6s var(--ease),filter .4s,box-shadow .6s}
+.wall.shown .pick{transition:opacity 1s ease .6s}
+.np-note[hidden]{display:none}
 .cols{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
 .col{display:flex;flex:none;width:max-content;animation:drift var(--d,70s) linear infinite;will-change:transform}
 .col:nth-child(even){animation-direction:reverse}
@@ -123,13 +124,14 @@ body.playing nav.top{opacity:0;pointer-events:none}
 /* now playing: big cover on the left, credits and player on the right, over a blurred wash of the cover */
 .np{position:fixed;inset:0;z-index:110;display:grid;place-items:center;padding:100px max(56px,env(safe-area-inset-right,0px)) 56px max(56px,env(safe-area-inset-left,0px));color:#fff;overflow-y:auto;opacity:0;visibility:hidden;transition:opacity .5s,visibility 0s .5s}
 .np.on{opacity:1;visibility:visible;transition:opacity .5s}
-.np-bg{position:fixed;inset:-12%;background:#1d1d1f center/cover no-repeat;filter:blur(70px) saturate(1.5) brightness(.5);transition:background-image .6s}
-.np-bg:after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.25)}
+.np-bg{position:fixed;inset:0;overflow:hidden;background:#3a3a40}
+.np-bg:before{content:"";position:absolute;inset:-30%;background:var(--img,none) center/cover no-repeat;filter:blur(90px) saturate(1.7) brightness(1.08);transition:opacity .6s}
+.np-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.22))}
 .np-in{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(36px,6vw,96px);align-items:center;width:min(100%,1240px)}
 .np-art{position:relative;margin:0;width:100%;max-width:min(100%,62vh);justify-self:end;aspect-ratio:1;border-radius:22px;overflow:hidden;background:#2a2a2e;box-shadow:0 60px 120px -40px rgba(0,0,0,.75);transform-origin:0 0}
 .np-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .35s}
 .np-art img.out{opacity:0}
-.np-info{min-width:0;max-width:520px}
+.np-info{min-width:0;max-width:520px;text-shadow:0 1px 18px rgba(0,0,0,.28)}
 .np-info>*{opacity:0;translate:28px 0;transition:opacity .6s,translate .9s var(--ease)}
 .np.on .np-info>*{opacity:1;translate:0 0}
 .np.on .np-info>:nth-child(2){transition-delay:.06s}.np.on .np-info>:nth-child(3){transition-delay:.12s}.np.on .np-info>:nth-child(4){transition-delay:.18s}.np.on .np-info>:nth-child(5){transition-delay:.24s}.np.on .np-info>:nth-child(6){transition-delay:.3s}
@@ -563,50 +565,83 @@ function sampleCover(i){var c=d.createElement('canvas');c.width=c.height=480;var
 function samples(){var a=[];for(var i=0;i<14;i++)a.push({title:'Song title '+('0'+(i+1)).slice(-2),artist:'Artist name',credits:[['Production','Ros-e']],cover:sampleCover(i),sample:true});return a}
 function mmss(ms){if(!ms)return '';var s=Math.round(ms/1000);return Math.floor(s/60)+':'+('0'+s%60).slice(-2)}
 
-/* build the drifting columns: each column starts at a different song so neighbours differ */
+/* build the drifting rows */
 var lastKey='';
-/* exactly four full rows: the tile size is a quarter of the wall's height */
-function layout(){var w=innerWidth,h=wall.clientHeight||innerHeight,t=h/4;return {t:t,rows:4,per:Math.ceil(w/t)+1}}
-/* one tile per cover: songs from the same album share a cover, so the wall shows it once and plays the album's first song */
+/* exactly four full rows: the tile size is a quarter of the wall's height; a row needs just enough covers to span the screen */
+function layout(){var w=innerWidth,h=wall.clientHeight||innerHeight,t=h/4;return {t:t,rows:4,per:Math.ceil(w/t)}}
+/* one tile per cover: songs from the same album share an image (Spotify serves the same image id from several hosts),
+   so the wall shows it once and plays the album's first song */
 var COVERS=[],SONG_C=[];
-function coverKey(u){var m=String(u).match(/i\.scdn\.co\/image\/ab67616d0000[0-9a-f]{4}([0-9a-f]+)/);return m?m[1]:String(u)}
-function groupCovers(){var seen={};COVERS=[];SONG_C=[];SONGS.forEach(function(s,i){var k=coverKey(s.cover);if(seen[k]===undefined){seen[k]=COVERS.length;COVERS.push({cover:s.cover,i:i})}SONG_C[i]=seen[k]})}
+function coverKey(u){var m=String(u).match(/ab67616d0000[0-9a-f]{4}([0-9a-f]{20,})/);return m?m[1]:String(u)}
+function groupCovers(){var seen={};COVERS=[];SONG_C=[];SONGS.forEach(function(s,i){var k=coverKey(s.cover);if(seen[k]===undefined){seen[k]=COVERS.length;COVERS.push({cover:s.cover,i:i,light:!!s.light})}SONG_C[i]=seen[k]})}
+/* the image at a given width: Spotify keeps 64, 300 and 640px versions under the same id */
+function sized(u,w){return String(u).replace(/ab67616d0000(b273|1e02|4851)/,'ab67616d0000'+(w>=640?'b273':w>=300?'1e02':'4851'))}
 function build(){
- if(!COVERS.length)return;var L=layout(),n=COVERS.length,rows=[],h='';lastKey=L.t+'x'+L.rows+'x'+L.per;
- /* deal the covers out across the rows; a row only borrows a cover (one not in it or its neighbours) when there are too few to fill the screen */
- for(var r=0;r<L.rows;r++)rows.push([]);
- for(var c=0;c<n;c++)rows[c%L.rows].push(c);
- rows.forEach(function(row,r){
-  /* first covers from rows further away, then from neighbouring rows, and only if the row still is short, a repeat within the row */
+ if(!COVERS.length)return;var L=layout(),n=COVERS.length,R=L.rows,rows=[],h='';lastKey=L.t+'x'+R+'x'+L.per;
+ for(var r=0;r<R;r++)rows.push([]);
+ /* covers with a light background go to the top and bottom rows, away from the white logo; the rest fill the middle first */
+ var light=[],dark=[];COVERS.forEach(function(c,i){(c.light?light:dark).push(i)});
+ var edge=[0,R-1],mid=[];for(r=1;r<R-1;r++)mid.push(r);
+ var cap=Math.max(L.per,Math.ceil(n/R));
+ light.forEach(function(c,k){rows[edge[k%2]].push(c)});
+ dark.forEach(function(c){var target=mid.concat(edge).sort(function(a,b){return rows[a].length-rows[b].length})[0];
+  for(var q=0;q<mid.length;q++)if(rows[mid[q]].length<cap){target=mid[q];break}
+  rows[target].push(c)});
+ /* a row short of covers borrows from rows that are not its neighbours; middle rows only borrow dark covers */
+ var gcd=function(a,b){return b?gcd(b,a%b):a},step=[5,7,3,11,13,1].filter(function(x){return gcd(x,n)===1})[0];
+ rows.forEach(function(row,r){var isMid=r>0&&r<R-1;
   [function(c){return row.indexOf(c)<0&&(rows[r-1]||[]).indexOf(c)<0&&(rows[r+1]||[]).indexOf(c)<0},function(c){return row.indexOf(c)<0},function(){return true}].forEach(function(ok){
-   for(var k=0;k<n&&row.length<L.per;k++){var c=(r*7+k)%n;if(ok(c))row.push(c)}})});
+   for(var k=0;k<n&&row.length<L.per;k++){var c=(r*7+k*step)%n;if(ok(c)&&!(isMid&&COVERS[c].light))row.push(c)}})});
+ var px=Math.round(L.t*(devicePixelRatio||1));
  rows.forEach(function(row,r){
-  var one=function(hidden){return row.map(function(c,q){var s=SONGS[COVERS[c].i];return '<button class="tile" type="button" data-i="'+COVERS[c].i+'" data-c="'+c+'" style="--dl:'+((r*.13+q*.17)%.9).toFixed(2)+'s"'+(hidden?' tabindex="-1" aria-hidden="true"':' aria-label="Play '+esc(s.title)+' by '+esc(s.artist)+'"')+'><img src="'+esc(COVERS[c].cover)+'" alt="" decoding="async"></button>'}).join('')};
+  var one=function(hidden){return row.map(function(c,q){var s=SONGS[COVERS[c].i];return '<button class="tile" type="button" data-i="'+COVERS[c].i+'" data-c="'+c+'" style="--dl:'+((r*.11+q*.07)%.5).toFixed(2)+'s"'+(hidden?' tabindex="-1" aria-hidden="true"':' aria-label="Play '+esc(s.title)+' by '+esc(s.artist)+'"')+'><img src="'+esc(sized(COVERS[c].cover,px))+'" alt="" decoding="async" fetchpriority="high"></button>'}).join('')};
   h+='<div class="col" style="--d:'+(row.length*9+r%3*7)+'s;animation-delay:-'+(r*5.7)+'s">'+one(false)+one(true)+'</div>'});
- cols.style.setProperty('--t',L.t+'px');cols.innerHTML=h;reveal()}
-/* entrance: the logo appears on black first, then the covers fade in */
-var introDone=false,t0=Date.now();
-function reveal(){var wait=Math.max(0,(reduce||root.classList.contains('nogl')?300:2100)-(Date.now()-t0));setTimeout(function(){wall.classList.add('shown')},wait)}
+ cols.style.setProperty('--t',L.t+'px');cols.innerHTML=h;
+ cols.querySelectorAll('img').forEach(function(im){if(im.complete&&im.naturalWidth)im.parentNode.classList.add('ok');else im.addEventListener('load',function(){im.parentNode.classList.add('ok')},{once:true})});
+ reveal()}
+/* entrance: the logo appears on black first; each cover fades in as soon as the logo has landed and its image is ready */
+var t0=Date.now();
+function reveal(){var wait=Math.max(0,(reduce||root.classList.contains('nogl')?200:1700)-(Date.now()-t0));setTimeout(function(){wall.classList.add('shown')},wait)}
 var rz;addEventListener('resize',function(){clearTimeout(rz);rz=setTimeout(function(){var L=layout();if(L.t+'x'+L.rows+'x'+L.per!==lastKey)build()},200)});
-/* a cover that fails to load gets a stand-in */
 cols.addEventListener('error',function(e){var t=e.target;if(t.tagName!=='IMG')return;var i=+t.parentNode.dataset.i;
- /* the 640px cover is missing for a few releases: fall back to the 300px one, then to a stand-in */
- if(/ab67616d0000b273/.test(t.src)){t.src=t.src.replace('ab67616d0000b273','ab67616d00001e02');return}
+ /* a missing size falls back to the 300px version, then to a stand-in */
+ if(/ab67616d0000(b273|4851)/.test(t.src)){t.src=t.src.replace(/ab67616d0000(b273|4851)/,'ab67616d00001e02');return}
  t.src=SONGS[i].cover=sampleCover(i)},true);
 
-function useList(list){SONGS=list;groupCovers();build()}
+/* is a cover mostly light? judged from its 64px version; images that cannot be read count as dark */
+function measure(s){return new Promise(function(done){
+ if(s.light!==undefined||!/ab67616d0000/.test(s.cover))return done();
+ var im=new Image(),to=setTimeout(fin,1200);im.crossOrigin='anonymous';
+ function fin(){clearTimeout(to);done()}
+ im.onload=function(){try{var c=d.createElement('canvas');c.width=c.height=16;var x=c.getContext('2d');x.drawImage(im,0,0,16,16);
+  var p=x.getImageData(0,0,16,16).data,sum=0,bright=0;for(var k=0;k<p.length;k+=4){var l=(.2126*p[k]+.7152*p[k+1]+.0722*p[k+2])/255;sum+=l;if(l>.82)bright++}
+  s.light=sum/256>.62||bright/256>.4}catch(e){}fin()};
+ im.onerror=fin;im.src=sized(s.cover,64)})}
+function useList(list){SONGS=list;Promise.all(list.map(measure)).then(function(){groupCovers();build()})}
+
 /* sample covers only in local previews; the live site shows nothing but the playlist */
 var demo=location.protocol==='file:'||/localhost|127\.0\.0\.1|claude/.test(location.hostname);
-var bigCover=function(u){return String(u||'').replace(/ab67616d0000(1e02|4851)/,'ab67616d0000b273')};
+var bigCover=function(u){return sized(u||'',640)};
+var CACHE='rose-playlist-v1';
+function toSongs(tracks){return tracks.map(function(t){var cr=CREDITS[t.id]||[['Production','Ros-e']];if(t.duration&&!CREDITS[t.id])cr=cr.concat([['Length',mmss(t.duration)]]);
+ return {title:t.title,artist:t.artist,spotify:t.id,cover:bigCover(t.cover),credits:cr}})}
+/* a returning visitor sees the wall from the last visit at once; the fresh list is saved for next time */
+var cached=null;try{cached=JSON.parse(localStorage.getItem(CACHE)||'null')}catch(e){}
+if(cached&&cached.length)useList(toSongs(cached));
 fetch('/api/playlist').then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(j){
  if(!j.tracks||!j.tracks.length)throw new Error(j.error||'empty playlist');
- var list=j.tracks.map(function(t){var cr=CREDITS[t.id]||[['Production','Ros-e']];if(t.duration&&!CREDITS[t.id])cr=cr.concat([['Length',mmss(t.duration)]]);
-  return {title:t.title,artist:t.artist,spotify:t.id,cover:bigCover(t.cover),credits:cr}});
+ var list=toSongs(j.tracks);
  /* a song that came without a cover gets it straight from Spotify's oEmbed in the browser */
  return Promise.all(list.filter(function(s){return !s.cover}).map(function(s){
   return fetch('https://open.spotify.com/oembed?url='+encodeURIComponent('https://open.spotify.com/track/'+s.spotify)).then(function(r){return r.ok?r.json():null}).then(function(o){if(o&&o.thumbnail_url)s.cover=bigCover(o.thumbnail_url)}).catch(function(){})
- })).then(function(){useList(list.filter(function(s){return s.cover}))})
+ })).then(function(){
+  list=list.filter(function(s){return s.cover});
+  var fresh=j.tracks.filter(function(t){return list.some(function(s){return s.spotify===t.id})}).map(function(t){var s=list.filter(function(x){return x.spotify===t.id})[0];return Object.assign({},t,{cover:s.cover})});
+  var same=cached&&JSON.stringify(cached)===JSON.stringify(fresh);
+  try{localStorage.setItem(CACHE,JSON.stringify(fresh))}catch(e){}
+  if(!same&&(!cached||!cached.length||np.hidden))useList(list)})
 }).catch(function(err){console.warn('Spotify playlist not loaded',err);
+ if(cached&&cached.length)return;
  if(demo)useList(samples());else reveal()});
 
 /* Spotify's iFrame API lets the page start the song right after the click; a plain embed is the fallback */
@@ -631,7 +666,7 @@ function fill(i,swap){
  var s=SONGS[i],img=$('npImg');cur=i;
  var set=function(){img.src=s.cover;img.alt='Cover of '+s.title;img.classList.remove('out')};
  if(swap){img.classList.add('out');setTimeout(set,180)}else set();
- $('npBg').style.backgroundImage='url("'+String(s.cover).replace(/"/g,'%22')+'")';
+ $('npBg').style.setProperty('--img','url("'+String(s.cover).replace(/"/g,'%22')+'")');
  $('npT').textContent=s.title;$('npA').textContent=s.artist;$('npN').hidden=!s.sample;
  $('npCr').innerHTML=s.credits.map(function(c){return '<dt>'+esc(c[0])+'</dt><dd>'+esc(c[1])+'</dd>'}).join('');
  if(s.spotify)playSpotify(s.spotify);else if(s.yt)playYouTube(s.yt,s.title);else{ctrl=null;$('npP').className='np-player';$('npP').innerHTML=''}
