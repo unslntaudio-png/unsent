@@ -129,12 +129,13 @@ main{position:relative;z-index:2}
 .b-face{grid-column:span 5}
 .b-svc{grid-column:span 5}
 .b-with{grid-column:span 7}
-.b-face .core,.b-bio .core{height:100%}
+.b-bio .core{height:100%}
 .b-bio p{margin:0 0 20px;font-size:clamp(18px,1.5vw,21px);line-height:1.6;color:var(--dim);max-width:56ch}
 .b-bio p.big{font-size:clamp(24px,2.3vw,32px);line-height:1.25;color:var(--ink);font-weight:500;letter-spacing:-.025em}
 .b-bio a{color:var(--ink);text-decoration:underline;text-decoration-color:rgba(255,255,255,.35);text-underline-offset:4px}
-.b-face .core{padding:0;overflow:hidden;position:relative;min-height:320px}
-.b-face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%}
+/* round photo, the head breaking out over the top of the circle */
+.b-face{display:flex;align-items:center;justify-content:center;min-width:0}
+.b-face img{display:block;width:min(100%,430px);height:auto;filter:drop-shadow(0 30px 40px rgba(0,0,0,.45))}
 .b-svc .core{padding:12px 32px}
 .label{margin:0 0 18px;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
 .ai{border-bottom:1px solid var(--line)}
@@ -347,7 +348,7 @@ nav.top a.talk,.cta a.wa,.np-svc button[aria-pressed=true]{background:rgba(255,2
     <p>His sound comes out of RnB and electronic music: programmed beats next to real players, warm low end, and room for the vocal to lead. He works with artists from the first voice memo to the finished record.</p>
     <p>He also runs <a href="https://unslnt.com/" target="_blank" rel="noopener">UNSLNT.</a>, a studio that writes original music for TV and advertising.</p>
    </div></div>
-   <div class="shell b-face rvl"><div class="core"><img src="ros-e.jpg" width="575" height="719" alt="Tom Rosenberg wearing headphones behind the decks" loading="lazy"></div></div>
+   <div class="b-face rvl"><img src="ros-e-circle.webp" width="896" height="1056" alt="Tom Rosenberg wearing headphones behind the decks" loading="lazy"></div>
    <div class="shell b-svc rvl"><div class="core">
     <div id="acc">
      <div class="ai"><button type="button" aria-expanded="false" aria-controls="s1">Production<span class="plus" aria-hidden="true"></span></button><div class="body" id="s1"><div><p>Building the track around the song: beats, sounds, live instruments and the direction of the record.</p></div></div></div>
