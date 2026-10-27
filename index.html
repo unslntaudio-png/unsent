@@ -59,14 +59,19 @@ img{max-width:100%}
 /* ---- the wall: fixed behind everything ---- */
 .wall{position:fixed;inset:0;z-index:0;overflow:hidden;background:#000}
 .cols{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
-.col{display:flex;flex:none;width:max-content;animation:drift var(--d,70s) linear infinite;will-change:transform;backface-visibility:hidden;contain:layout paint}
+.col{display:flex;flex:none;height:25%;width:max-content;animation:drift var(--d,70s) linear infinite;will-change:transform;backface-visibility:hidden;contain:layout paint}
 .col:nth-child(even){animation-direction:reverse}
 @keyframes drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
-.wall.frozen .col,.cols:hover .col{animation-play-state:paused}
-.tile{position:relative;display:block;flex:none;width:var(--t,300px);height:var(--t,300px);margin:0;padding:0;border:0;border-radius:0;overflow:hidden;background:#111;cursor:pointer;transition:transform .6s var(--ease),filter .4s}
+.wall.frozen .col{animation-play-state:paused}
+.tile{position:relative;display:block;flex:none;height:100%;width:auto;aspect-ratio:1;margin:0;padding:0;border:0;border-radius:0;overflow:hidden;background:#111;cursor:pointer;transition:transform .6s var(--ease),filter .4s}
 .tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.cols:has(.tile:hover) .tile:not(:hover){filter:brightness(.55) saturate(.85)}
-.cols .tile:hover,.cols .tile:focus-visible{transform:scale(1.04);z-index:2;box-shadow:0 30px 60px -18px rgba(0,0,0,.7);border-radius:8px}
+/* hover effects only where there is a mouse, so a tap on a phone leaves nothing behind */
+@media (hover:hover) and (pointer:fine){
+ .cols:hover .col{animation-play-state:paused}
+ .cols:has(.tile:hover) .tile:not(:hover){filter:brightness(.55) saturate(.85)}
+ .cols .tile:hover{transform:scale(1.04);z-index:2;box-shadow:0 30px 60px -18px rgba(0,0,0,.7);border-radius:8px}
+}
+.cols .tile:focus-visible{transform:scale(1.04);z-index:2;border-radius:8px}
 .tile:focus-visible{outline:3px solid #fff;outline-offset:-3px}
 .wall:not(.shown) .tile,.wall .tile:not(.ok){opacity:0}
 .wall.shown .tile{transition:opacity .8s var(--ease) var(--dl,0s),transform .6s var(--ease),filter .4s,box-shadow .6s}
@@ -75,6 +80,11 @@ img{max-width:100%}
 @media (prefers-reduced-transparency:reduce){.veil{background:rgba(5,5,5,.92);-webkit-backdrop-filter:none;backdrop-filter:none}}
 body.deep .wall{pointer-events:none}
 body.deep .col{animation-play-state:paused}
+/* a dark band behind the corner logo and the nav once the page scrolls */
+.topfade{position:fixed;left:0;right:0;top:0;height:calc(118px + env(safe-area-inset-top,0px));z-index:35;pointer-events:none;background:linear-gradient(rgba(5,5,5,.97),rgba(5,5,5,.9) 58%,rgba(5,5,5,0));opacity:0;transition:opacity .5s var(--ease)}
+body.mini .topfade{opacity:1}
+body.playing .topfade{opacity:0}
+.sat{position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden}
 /* the 3D logo and its corner button */
 #gl{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:40;pointer-events:none}
 .nogl #gl{display:none}
@@ -233,13 +243,13 @@ html.a11y-still *,html.a11y-still *::before,html.a11y-still *::after{animation:n
 
 @media (max-width:900px){
  body{font-size:17px}
- nav.top a:not(.talk):not(.ig){display:none}
+ nav.top a{padding:0 13px}
  .sec{padding-block:96px}
  .bento{grid-template-columns:1fr;gap:14px;margin-top:40px}
  .b-bio,.b-face,.b-svc,.b-with{grid-column:auto;grid-row:auto}
  .core{padding:28px 24px}
  .b-svc .core{padding:6px 22px}
- .np{place-items:start center;padding:86px 20px 40px}
+ .np{place-items:start center;padding:calc(86px + env(safe-area-inset-top,0px)) 20px calc(40px + env(safe-area-inset-bottom,0px))}
  .np-in{grid-template-columns:1fr;gap:24px}
  .np-art{justify-self:center;max-width:min(100%,420px);border-radius:18px}
  .home{width:120px;height:50px}
@@ -269,6 +279,8 @@ html.a11y-still *,html.a11y-still *::before,html.a11y-still *::after{animation:n
 
 <div class="wall" id="wall"><div class="cols" id="cols" aria-label="Songs produced by Ros-e"></div></div>
 <div class="veil" id="veil" aria-hidden="true"></div>
+<div class="topfade" aria-hidden="true"></div>
+<div class="sat" id="sat" aria-hidden="true"></div>
 <canvas id="gl" aria-hidden="true"></canvas>
 <svg class="flat" viewBox="0 0 456 148" aria-hidden="true"><use href="#lg"/></svg>
 <button class="home" id="home" type="button" aria-label="Back to the top"></button>
@@ -455,7 +467,7 @@ function coverKey(u){u=String(u);var m=u.match(/\/covers\/([0-9a-f]+)-/)||u.matc
 function groupCovers(){var seen={};COVERS=[];SONG_C=[];SONGS.forEach(function(s,i){var k=coverKey(s.cover);if(seen[k]===undefined){seen[k]=COVERS.length;COVERS.push({cover:s.cover,small:s.cover300||s.cover,i:i})}SONG_C[i]=seen[k]})}
 /* exactly four full rows: the tile is a quarter of the screen's height; a row needs just enough covers to span the screen */
 var lastKey='';
-function layout(){var w=innerWidth,h=innerHeight,t=h/4;return {t:t,rows:4,per:Math.ceil(w/t)}}
+function layout(){var w=innerWidth,h=Math.min(innerHeight,screen.height||innerHeight),t=h/4;return {t:t,rows:4,per:Math.ceil(w/t)+1}}
 function build(){
  if(!COVERS.length)return;var L=layout(),n=COVERS.length,R=L.rows,rows=[],h='';lastKey=L.t+'x'+R+'x'+L.per;
  /* deal the covers out in a mixed order; a row short of covers borrows ones that are not in it or its neighbours */
@@ -469,13 +481,14 @@ function build(){
  rows.forEach(function(row,r){
   var one=function(hidden){return row.map(function(c,q){var cv=COVERS[c],s=SONGS[cv.i];return '<button class="tile" type="button" data-i="'+cv.i+'" data-c="'+c+'" style="--dl:'+((r*.11+q*.07)%.5).toFixed(2)+'s"'+(hidden?' tabindex="-1" aria-hidden="true"':' aria-label="Play '+esc(s.title)+' by '+esc(s.artist)+'"')+'><img src="'+esc(useSmall?cv.small:cv.cover)+'" alt="" decoding="async"></button>'}).join('')};
   h+='<div class="col" style="--d:'+(row.length*9+r%3*7)+'s;animation-delay:-'+(r*5.7)+'s">'+one(false)+one(true)+'</div>'});
- cols.style.setProperty('--t',L.t+'px');cols.innerHTML=h;
+ cols.innerHTML=h;
  cols.querySelectorAll('img').forEach(function(im){if(im.complete&&im.naturalWidth)im.parentNode.classList.add('ok');else im.addEventListener('load',function(){im.parentNode.classList.add('ok')},{once:true})});
  reveal()}
 /* entrance: the logo lands on black first; each cover fades in right after, as soon as its image is ready */
 var t0=Date.now();
 function reveal(){var wait=Math.max(0,(reduce||root.classList.contains('nogl')?200:1700)-(Date.now()-t0));setTimeout(function(){wall.classList.add('shown');d.body.classList.add('shown-pick')},wait)}
-var rz;addEventListener('resize',function(){clearTimeout(rz);rz=setTimeout(function(){var L=layout();if(L.t+'x'+L.rows+'x'+L.per!==lastKey)build()},200)});
+/* rebuild only when the width changes or the height changes a lot; a phone's toolbar sliding in and out is absorbed by CSS */
+var rz,lastW=innerWidth,lastH=innerHeight;addEventListener('resize',function(){clearTimeout(rz);rz=setTimeout(function(){if(innerWidth!==lastW||Math.abs(innerHeight-lastH)>160){lastW=innerWidth;lastH=innerHeight;build()}},200)});
 cols.addEventListener('error',function(e){var t=e.target;if(t.tagName!=='IMG')return;var i=+t.parentNode.dataset.i;
  /* a missing size falls back to the 300px version, then to a stand-in */
  if(/ab67616d0000(b273|4851)/.test(t.src)){t.src=t.src.replace(/ab67616d0000(b273|4851)/,'ab67616d00001e02');return}
@@ -608,7 +621,7 @@ function flip(m){if(m&&m.userData.spinT<0){m.userData.spinT=performance.now();ki
 addEventListener('pointermove',e=>{
  if(drag){const dx=e.clientX-lastX;lastX=e.clientX;moved+=Math.abs(dx);vel=dx*.008;spin+=vel;kick();return}
  if(e.pointerType==='mouse'&&!still){const m=pick(e);if(m!==hovered){hovered=m;flip(m)}}},{passive:true});
-addEventListener('pointerdown',e=>{if(npMode||scrollY>vh*.1)return;const m=pick(e);if(!m)return;drag=true;moved=0;lastX=e.clientX;window.__logoDrag=true});
+addEventListener('pointerdown',e=>{if(npMode||scrollY>vh*.1)return;const m=pick(e);if(!m)return;if(e.pointerType!=='mouse'){flip(m);return}drag=true;moved=0;lastX=e.clientX;window.__logoDrag=true});
 addEventListener('pointerup',e=>{if(!drag)return;drag=false;if(moved<6)flip(pick(e));setTimeout(()=>{window.__logoDrag=false},0)});
 addEventListener('pointercancel',()=>{drag=false;window.__logoDrag=false});
 addEventListener('np:open',()=>{npMode=1;kick()});
@@ -629,7 +642,7 @@ function frame(now){
  if(!drag){vel*=.94;spin+=vel;const home=Math.round(spin/(Math.PI*2))*Math.PI*2;if(Math.abs(vel)<.002)spin+=(home-spin)*.05}
  rx+=(0-rx)*.08;ry+=(0-ry)*.08;
  /* corner pose: about 128px wide, tucked into the top-left */
- const wpp=2*camZ*tanH/vh,px=vw<900?108:128,cxp=Math.max(20,parseFloat(getComputedStyle(root).getPropertyValue('--gut'))||20)+px/2,cyp=14+px*H/W/2+12;
+ const wpp=2*camZ*tanH/vh,px=vw<900?108:128,cxp=Math.max(20,parseFloat(getComputedStyle(root).getPropertyValue('--gut'))||20)+px/2,cyp=14+(document.getElementById('sat').offsetHeight||0)+px*H/W/2+12;
  const s=1+(px*wpp/W-1)*k;
  group.scale.setScalar(s);
  group.position.set((cxp-vw/2)*wpp*k,(vh/2-cyp)*wpp*k,0);
