@@ -81,7 +81,7 @@ img{max-width:100%}
 body.deep .wall{pointer-events:none}
 body.deep .col{animation-play-state:paused}
 /* a dark band behind the corner logo and the nav once the page scrolls */
-.topfade{position:fixed;left:0;right:0;top:0;height:calc(118px + env(safe-area-inset-top,0px));z-index:35;pointer-events:none;background:linear-gradient(rgba(5,5,5,.97),rgba(5,5,5,.9) 58%,rgba(5,5,5,0));opacity:0;transition:opacity .5s var(--ease)}
+.topfade{position:fixed;left:0;right:0;top:0;height:calc(150px + env(safe-area-inset-top,0px));z-index:35;pointer-events:none;background:radial-gradient(240px 110px at 100px calc(44px + env(safe-area-inset-top,0px)),rgba(5,5,5,.82),rgba(5,5,5,.45) 55%,rgba(5,5,5,0) 100%);opacity:0;transition:opacity .5s var(--ease)}
 body.mini .topfade{opacity:1}
 body.playing .topfade{opacity:0}
 .sat{position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden}
@@ -120,8 +120,8 @@ main{position:relative;z-index:2}
 .h2 .soft{color:var(--faint)}
 .lede{margin:24px 0 0;max-width:46ch;font-size:clamp(19px,1.7vw,23px);line-height:1.45;color:var(--dim);text-wrap:pretty}
 /* double bezel: a glass tray with a hairline, holding a slightly darker core */
-.shell{padding:var(--bez);border-radius:var(--R);background:var(--glass);box-shadow:inset 0 0 0 1px var(--line)}
-.core{height:100%;border-radius:calc(var(--R) - var(--bez));background:rgba(12,12,14,.6);box-shadow:inset 0 1px 1px rgba(255,255,255,.08);padding:44px;min-width:0}
+.shell{position:relative;padding:var(--bez);border-radius:var(--R);background:linear-gradient(135deg,rgba(255,255,255,.3),rgba(255,255,255,.1) 50%,rgba(255,255,255,.18));box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),inset 0 0 0 1px rgba(255,255,255,.26),0 30px 80px -40px rgba(0,0,0,.5)}
+.core{height:100%;border-radius:calc(var(--R) - var(--bez));background:radial-gradient(120% 80% at 15% 0%,rgba(255,255,255,.2),transparent 50%),rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 0 0 1px rgba(255,255,255,.14),inset 0 -20px 40px -30px rgba(255,255,255,.4);padding:44px;min-width:0}
 
 /* about: asymmetric bento */
 .bento{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px;margin-top:64px}
@@ -273,19 +273,22 @@ html.a11y-still *,html.a11y-still *::before,html.a11y-still *::after{animation:n
 /* ---- Liquid Glass: a web approximation of Apple's material (the real one exists only on Apple platforms).
    Clear glass that tints with whatever is behind it, a bright top edge, a soft specular glow, a thin light rim. ---- */
 :root{
- --lg-bg:linear-gradient(135deg,rgba(255,255,255,.26),rgba(255,255,255,.07) 55%,rgba(255,255,255,.13)),rgba(255,255,255,.06);
- --lg-blur:blur(22px) saturate(1.9) brightness(1.06);
- --lg-edge:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(255,255,255,.2),0 14px 40px -14px rgba(0,0,0,.4)}
+ --lg-bg:linear-gradient(135deg,rgba(255,255,255,.42),rgba(255,255,255,.16) 48%,rgba(255,255,255,.26)),rgba(255,255,255,.14);
+ --lg-blur:blur(16px) saturate(2.2) brightness(1.22);
+ --lg-edge:inset 0 1.5px 0 rgba(255,255,255,.85),inset 0 -1px 0 rgba(255,255,255,.3),inset 1px 0 0 rgba(255,255,255,.25),inset -1px 0 0 rgba(255,255,255,.25),inset 0 0 0 1px rgba(255,255,255,.28),inset 0 -12px 24px -14px rgba(255,255,255,.45),0 14px 40px -14px rgba(0,0,0,.4)}
 nav.top,.cta,.a11y-b,.a11y-p,.telm,.np-svc,.np-ctl button{background:var(--lg-bg);-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);box-shadow:var(--lg-edge);isolation:isolate}
 nav.top:before,.cta:before,.telm:before,.a11y-p:before,.np-svc:before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;background:radial-gradient(120% 90% at 18% 0%,rgba(255,255,255,.32),transparent 46%)}
 .np-svc{position:relative}
 .telm{box-shadow:0 0 0 100vmax rgba(0,0,0,.42),var(--lg-edge)}
-nav.top a,.cta a{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.3)}
+nav.top a,.cta a{color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.45)}
 nav.top a:hover{background:rgba(255,255,255,.18)}
 nav.top a.talk,.cta a.wa,.np-svc button[aria-pressed=true]{background:rgba(255,255,255,.92);color:#0a0a0a;text-shadow:none;box-shadow:0 2px 10px rgba(0,0,0,.12),inset 0 1px 0 #fff}
 .telm a,.a11y-p button{background:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 0 0 1px rgba(255,255,255,.08)}
 .a11y-p button[aria-pressed=true]{background:rgba(255,255,255,.92);color:#0a0a0a}
 .np-ctl button:hover{background:linear-gradient(135deg,rgba(255,255,255,.4),rgba(255,255,255,.16)),rgba(255,255,255,.1)}
+.shell .core{--dim:rgba(255,255,255,.84);--faint:rgba(255,255,255,.62);text-shadow:0 1px 12px rgba(0,0,0,.3)}
+/* Chromium can bend the backdrop: a lens distortion at the glass edge, the signature of Liquid Glass */
+.lg-refract nav.top,.lg-refract .cta{-webkit-backdrop-filter:url(#lgf) var(--lg-blur);backdrop-filter:url(#lgf) var(--lg-blur)}
 @media (prefers-reduced-transparency:reduce){nav.top,.cta,.a11y-b,.a11y-p,.telm,.np-svc,.np-ctl button{background:rgba(44,44,48,.96);-webkit-backdrop-filter:none;backdrop-filter:none}}
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Tom Rosenberg","alternateName":"Ros-e","jobTitle":"Music producer","address":{"@type":"PostalAddress","addressLocality":"Tel Aviv","addressCountry":"IL"},"email":"betterberose@gmail.com","telephone":"+972509150047","sameAs":["https://open.spotify.com/playlist/1mg0TvIUJAOUPh5dPvkyiu"]}</script>
@@ -295,6 +298,7 @@ nav.top a.talk,.cta a.wa,.np-svc button[aria-pressed=true]{background:rgba(255,2
 <a class="skip" href="#about">Skip to content</a>
 
 <div class="wall" id="wall"><div class="cols" id="cols" aria-label="Songs produced by Ros-e"></div></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="lgf" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".006 .02" numOctaves="2" seed="7" result="n"/><feGaussianBlur in="n" stdDeviation="3" result="nb"/><feDisplacementMap in="SourceGraphic" in2="nb" scale="34" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
 <div class="veil" id="veil" aria-hidden="true"></div>
 <div class="topfade" aria-hidden="true"></div>
 <div class="sat" id="sat" aria-hidden="true"></div>
@@ -403,6 +407,8 @@ var d=document,root=d.documentElement,reduce=matchMedia('(prefers-reduced-motion
 function $(id){return d.getElementById(id)}
 function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 if(!reduce&&'IntersectionObserver' in window)root.classList.add('js');
+/* only Chromium applies SVG filters to the backdrop; elsewhere the glass keeps its plain frost */
+if(navigator.userAgentData&&navigator.userAgentData.brands&&navigator.userAgentData.brands.some(function(b){return /Chromium/.test(b.brand)}))root.classList.add('lg-refract');
 
 /* contact wiring */
 var wa='https://wa.me/'+CONTACT.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(CONTACT.wa);
