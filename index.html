@@ -85,7 +85,7 @@ body.mini .topfade{opacity:1}
 body.playing .topfade{opacity:0}
 .sat{position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden}
 /* the 3D logo and its corner button */
-#gl{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:40;pointer-events:none}
+#gl{position:fixed;left:0;top:0;z-index:40;pointer-events:none}
 .nogl #gl{display:none}
 .flat{position:fixed;left:50%;top:48%;translate:-50% -50%;width:min(56%,620px);color:#fff;z-index:40;display:none;pointer-events:none;transition:all .8s var(--ease)}
 .nogl .flat{display:block}
@@ -643,10 +643,12 @@ const letters=PTS.map((subs,i)=>{
  const m=new THREE.Mesh(g,mat);m.userData={bx:cx-W/2,by:cy+H/2,i,spinT:-1};
  group.add(m);return m});
 const tanH=Math.tan(THREE.MathUtils.degToRad(6));
-function fit(){vw=innerWidth;vh=innerHeight;renderer.setSize(vw,vh,false);camera.aspect=vw/vh;
+/* the canvas gets the exact size of the visible screen (100vh on a phone is taller than it while the toolbar shows,
+   which stretched the logo and pushed it off centre) */
+function fit(){const vv=window.visualViewport;vw=Math.round(vv?vv.width:innerWidth);vh=Math.round(vv?vv.height:innerHeight);renderer.setSize(vw,vh,true);camera.aspect=vw/vh;
  const frac=vw<700?.62:vw<1100?.46:.38;camZ=Math.max((W/frac)/(2*tanH*camera.aspect),(H*2.4)/(2*tanH));
  camera.position.set(0,0,camZ);camera.lookAt(0,0,0);camera.updateProjectionMatrix();kick()}
-addEventListener('resize',fit);
+addEventListener('resize',fit);if(window.visualViewport)visualViewport.addEventListener('resize',fit);
 
 let tx=0,ty=0,rx=0,ry=0,spin=0,vel=0,drag=false,lastX=0,moved=0,hovered=null,npMode=0,mt=0;
 const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
