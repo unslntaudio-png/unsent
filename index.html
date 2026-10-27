@@ -270,6 +270,23 @@ html.a11y-still *,html.a11y-still *::before,html.a11y-still *::after{animation:n
  .np-info>*{opacity:1;translate:none;transition:none}
  .body,.np,.cta{transition:none}
 }
+/* ---- Liquid Glass: a web approximation of Apple's material (the real one exists only on Apple platforms).
+   Clear glass that tints with whatever is behind it, a bright top edge, a soft specular glow, a thin light rim. ---- */
+:root{
+ --lg-bg:linear-gradient(135deg,rgba(255,255,255,.26),rgba(255,255,255,.07) 55%,rgba(255,255,255,.13)),rgba(255,255,255,.06);
+ --lg-blur:blur(22px) saturate(1.9) brightness(1.06);
+ --lg-edge:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(255,255,255,.2),0 14px 40px -14px rgba(0,0,0,.4)}
+nav.top,.cta,.a11y-b,.a11y-p,.telm,.np-svc,.np-ctl button{background:var(--lg-bg);-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);box-shadow:var(--lg-edge);isolation:isolate}
+nav.top:before,.cta:before,.telm:before,.a11y-p:before,.np-svc:before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;background:radial-gradient(120% 90% at 18% 0%,rgba(255,255,255,.32),transparent 46%)}
+.np-svc{position:relative}
+.telm{box-shadow:0 0 0 100vmax rgba(0,0,0,.42),var(--lg-edge)}
+nav.top a,.cta a{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.3)}
+nav.top a:hover{background:rgba(255,255,255,.18)}
+nav.top a.talk,.cta a.wa,.np-svc button[aria-pressed=true]{background:rgba(255,255,255,.92);color:#0a0a0a;text-shadow:none;box-shadow:0 2px 10px rgba(0,0,0,.12),inset 0 1px 0 #fff}
+.telm a,.a11y-p button{background:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 0 0 1px rgba(255,255,255,.08)}
+.a11y-p button[aria-pressed=true]{background:rgba(255,255,255,.92);color:#0a0a0a}
+.np-ctl button:hover{background:linear-gradient(135deg,rgba(255,255,255,.4),rgba(255,255,255,.16)),rgba(255,255,255,.1)}
+@media (prefers-reduced-transparency:reduce){nav.top,.cta,.a11y-b,.a11y-p,.telm,.np-svc,.np-ctl button{background:rgba(44,44,48,.96);-webkit-backdrop-filter:none;backdrop-filter:none}}
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Tom Rosenberg","alternateName":"Ros-e","jobTitle":"Music producer","address":{"@type":"PostalAddress","addressLocality":"Tel Aviv","addressCountry":"IL"},"email":"betterberose@gmail.com","telephone":"+972509150047","sameAs":["https://open.spotify.com/playlist/1mg0TvIUJAOUPh5dPvkyiu"]}</script>
 </head>
