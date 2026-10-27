@@ -65,10 +65,9 @@ img{max-width:100%}
 .wall.frozen .col{animation-play-state:paused}
 .tile{position:relative;display:block;flex:none;height:100%;width:auto;aspect-ratio:1;margin:0;padding:0;border:0;border-radius:0;overflow:hidden;background:#111;cursor:pointer;transition:transform .6s var(--ease),filter .4s}
 .tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-/* hover effects only where there is a mouse, so a tap on a phone leaves nothing behind */
+/* covers are never dimmed; with a mouse the wall only pauses so a cover is easy to click */
 @media (hover:hover) and (pointer:fine){
  .cols:hover .col{animation-play-state:paused}
- .cols:has(.tile:hover) .tile:not(:hover){filter:brightness(.55) saturate(.85)}
  .cols .tile:hover{z-index:2}
 }
 .cols .tile:focus-visible{z-index:2}
