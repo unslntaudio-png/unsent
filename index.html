@@ -110,6 +110,7 @@ body.playing nav.top{opacity:0;pointer-events:none}
 .hero{position:relative;height:100vh;height:100dvh;min-height:560px;z-index:2;pointer-events:none}
 .pick{position:absolute;left:0;right:0;bottom:calc(30px + env(safe-area-inset-bottom,0px));margin:0;text-align:center;color:#fff;font-size:15px;font-weight:500;text-shadow:0 1px 14px rgba(0,0,0,.6);opacity:0;transition:opacity 1s var(--ease) .6s}
 .shown-pick .pick{opacity:1}
+body.mini .pick{opacity:0;transition:opacity .3s}
 
 /* ---- content over the veil ---- */
 main{position:relative;z-index:2}
@@ -245,7 +246,11 @@ html.a11y-still *,html.a11y-still *::before,html.a11y-still *::after{animation:n
 @media (max-width:900px){
  body{font-size:17px}
  nav.top a{padding:0 13px}
- .sec{padding-block:96px}
+ .sec{padding-block:64px}
+ /* on a phone the top turns into a glass bar once the page scrolls, so text never runs under the logo and the menu */
+ .topfade{height:calc(68px + env(safe-area-inset-top,0px));background:linear-gradient(rgba(10,10,12,.55),rgba(10,10,12,.35));-webkit-backdrop-filter:blur(18px) saturate(1.8);backdrop-filter:blur(18px) saturate(1.8);box-shadow:inset 0 -1px 0 rgba(255,255,255,.14)}
+ #about.sec{padding-top:88px}
+ footer .wrap{padding-top:8px}
  .bento{grid-template-columns:1fr;gap:14px;margin-top:40px}
  .b-bio,.b-face,.b-svc,.b-with{grid-column:auto;grid-row:auto}
  .core{padding:28px 24px}
@@ -253,16 +258,19 @@ html.a11y-still *,html.a11y-still *::before,html.a11y-still *::after{animation:n
  .np{place-items:start center;padding:calc(86px + env(safe-area-inset-top,0px)) 20px calc(40px + env(safe-area-inset-bottom,0px))}
  .np-in{grid-template-columns:1fr;gap:24px}
  .np-art{justify-self:center;max-width:min(100%,420px);border-radius:18px}
- .home{width:120px;height:50px}
+ .home{width:100px;height:44px}
  .cact .btn{width:100%;justify-content:space-between}
  .cact .btn.plain{justify-content:center}
  .cta{display:flex;position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:65;gap:6px;padding:6px;border-radius:999px;background:rgba(20,20,22,.6);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);box-shadow:inset 0 0 0 1px var(--line);transform:translateY(160%);transition:transform .5s var(--ease)}
  .cta.on{transform:none}
  .cta a{flex:1;min-height:46px;display:flex;align-items:center;justify-content:center;border-radius:999px;font-size:15px;font-weight:500}
  .cta a.wa{background:#fff;color:#0a0a0a}
- footer .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
- .a11y-b{left:auto;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(76px + env(safe-area-inset-bottom,0px));width:42px;height:42px}
- .a11y-p{left:auto;right:12px;bottom:126px}
+ footer .wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+ /* on a phone the accessibility button lives in the top bar, between the logo and the menu, where it covers nothing */
+ .a11y-b{left:50%;right:auto;top:calc(18px + env(safe-area-inset-top,0px));bottom:auto;width:36px;height:36px;margin-left:-18px}
+ .a11y-b svg{width:18px;height:18px}
+ body.playing .a11y-b{opacity:0;pointer-events:none}
+ .a11y-p{left:12px;right:12px;width:auto;top:calc(64px + env(safe-area-inset-top,0px));bottom:auto}
 }
 @media (prefers-reduced-motion:reduce){
  html{scroll-behavior:auto}
@@ -666,7 +674,7 @@ function frame(now){
  if(!drag){vel*=.94;spin+=vel;const home=Math.round(spin/(Math.PI*2))*Math.PI*2;if(Math.abs(vel)<.002)spin+=(home-spin)*.05}
  rx+=(0-rx)*.08;ry+=(0-ry)*.08;
  /* corner pose: about 128px wide, tucked into the top-left */
- const wpp=2*camZ*tanH/vh,px=vw<900?108:128,cxp=Math.max(20,parseFloat(getComputedStyle(root).getPropertyValue('--gut'))||20)+px/2,cyp=14+(document.getElementById('sat').offsetHeight||0)+px*H/W/2+12;
+ const wpp=2*camZ*tanH/vh,px=vw<900?88:128,cxp=Math.max(20,parseFloat(getComputedStyle(root).getPropertyValue('--gut'))||20)+px/2,cyp=14+(document.getElementById('sat').offsetHeight||0)+px*H/W/2+12;
  const s=1+(px*wpp/W-1)*k;
  group.scale.setScalar(s);
  group.position.set((cxp-vw/2)*wpp*k,(vh/2-cyp)*wpp*k,0);
