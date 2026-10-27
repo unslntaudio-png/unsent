@@ -400,8 +400,9 @@ nav.top a.talk,.cta a.wa,.np-svc button[aria-pressed=true]{background:rgba(255,2
 <script>
 /* ===== EDIT HERE =====
    CONTACT: phone, email, and the Instagram profile link (the Instagram buttons stay hidden while it is empty).
-   The cover wall fills itself from the Spotify playlist. At every deploy, scripts/build-playlist.mjs saves the covers
-   into the site; to show newly added songs, redeploy (Netlify: Deploys > Trigger deploy).
+   The cover wall reads playlist.json and the images in /covers, both stored in this repo, so showing the wall never
+   waits on Spotify; Spotify is used only to play a song once it is opened. To add songs, add their covers and entries
+   there. Until playlist.json exists, the wall falls back to reading the playlist live through /api/playlist.
    CREDITS: extra credit lines per song, keyed by the Spotify track id (the part after /track/ in the song link).
      Songs without an entry show "Production: Ros-e" and their length. */
 var CONTACT={phone:'+972509150047',phoneShown:'+972-50-915-0047',email:'betterberose@gmail.com',instagram:'',

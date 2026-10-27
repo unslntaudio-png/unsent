@@ -1,6 +1,5 @@
 [build]
   publish = "."
-  command = "node scripts/build-playlist.mjs"
 
 [functions]
   directory = "netlify/functions"
