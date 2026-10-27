@@ -496,7 +496,7 @@ function samples(){var a=[];for(var i=0;i<16;i++){var c=sampleCover(i);a.push({t
 function mmss(ms){if(!ms)return '';var s=Math.round(ms/1000);return Math.floor(s/60)+':'+('0'+s%60).slice(-2)}
 
 /* one tile per image: songs from the same album share a cover, so the wall shows it once and plays the album's first song */
-function coverKey(u){u=String(u);var m=u.match(/\/covers\/([0-9a-f]+)-/)||u.match(/ab67616d0000[0-9a-f]{4}([0-9a-f]{20,})/);return m?m[1]:u}
+function coverKey(u){u=String(u);var m=u.match(/\/covers\/([A-Za-z0-9]+)-/)||u.match(/ab67616d0000[0-9a-f]{4}([0-9a-f]{20,})/);return m?m[1]:u}
 function groupCovers(){var seen={};COVERS=[];SONG_C=[];SONGS.forEach(function(s,i){var k=coverKey(s.cover);if(seen[k]===undefined){seen[k]=COVERS.length;COVERS.push({cover:s.cover,small:s.cover300||s.cover,i:i})}SONG_C[i]=seen[k]})}
 /* exactly four full rows: the tile is a quarter of the screen's height; a row needs just enough covers to span the screen */
 var lastKey='';
@@ -525,7 +525,7 @@ var rz,lastW=innerWidth,lastH=innerHeight;addEventListener('resize',function(){c
 cols.addEventListener('error',function(e){var t=e.target;if(t.tagName!=='IMG')return;var i=+t.parentNode.dataset.i;
  /* a missing size falls back to the 300px version, then to a stand-in */
  if(/ab67616d0000(b273|4851)/.test(t.src)){t.src=t.src.replace(/ab67616d0000(b273|4851)/,'ab67616d00001e02');return}
- if(/-640\.jpg$/.test(t.src)){t.src=t.src.replace('-640.jpg','-300.jpg');return}
+ if(/-640\.(jpg|webp)$/.test(t.src)){t.src=t.src.replace('-640.','-300.');return}
  t.src=SONGS[i].cover=sampleCover(i)},true);
 
 /* the artists from the playlist, for "Worked with" */
