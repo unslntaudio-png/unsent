@@ -69,9 +69,9 @@ img{max-width:100%}
 @media (hover:hover) and (pointer:fine){
  .cols:hover .col{animation-play-state:paused}
  .cols:has(.tile:hover) .tile:not(:hover){filter:brightness(.55) saturate(.85)}
- .cols .tile:hover{transform:scale(1.04);z-index:2;box-shadow:0 30px 60px -18px rgba(0,0,0,.7);border-radius:8px}
+ .cols .tile:hover{z-index:2}
 }
-.cols .tile:focus-visible{transform:scale(1.04);z-index:2;border-radius:8px}
+.cols .tile:focus-visible{z-index:2}
 .tile:focus-visible{outline:3px solid #fff;outline-offset:-3px}
 .wall:not(.shown) .tile,.wall .tile:not(.ok){opacity:0}
 .wall.shown .tile{transition:opacity .8s var(--ease) var(--dl,0s),transform .6s var(--ease),filter .4s,box-shadow .6s}
@@ -189,7 +189,7 @@ footer a:hover{color:var(--ink)}
 .np-bg:before{content:"";position:absolute;inset:-30%;background:var(--img,none) center/cover no-repeat;filter:blur(90px) saturate(1.7) brightness(1.08)}
 .np-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.24))}
 .np-in{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(36px,6vw,96px);align-items:center;width:min(100%,1240px)}
-.np-art{position:relative;margin:0;width:100%;max-width:min(100%,62vh);justify-self:end;aspect-ratio:1;border-radius:24px;overflow:hidden;background:#2a2a2e;box-shadow:0 60px 120px -40px rgba(0,0,0,.6);transform-origin:0 0}
+.np-art{position:relative;margin:0;width:100%;max-width:min(100%,62vh);justify-self:end;aspect-ratio:1;overflow:hidden;background:#2a2a2e;transform-origin:0 0}
 .np-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .35s}
 .np-art img.out{opacity:0}
 .np-info{min-width:0;max-width:520px;text-shadow:0 1px 18px rgba(0,0,0,.28)}
@@ -257,7 +257,7 @@ html.a11y-still *,html.a11y-still *::before,html.a11y-still *::after{animation:n
  .b-svc .core{padding:6px 22px}
  .np{place-items:start center;padding:calc(86px + env(safe-area-inset-top,0px)) 20px calc(40px + env(safe-area-inset-bottom,0px))}
  .np-in{grid-template-columns:1fr;gap:24px}
- .np-art{justify-self:center;max-width:min(100%,420px);border-radius:18px}
+ .np-art{justify-self:center;max-width:min(100%,420px)}
  .home{width:100px;height:44px}
  .cact .btn{width:100%;justify-content:space-between}
  .cact .btn.plain{justify-content:center}
