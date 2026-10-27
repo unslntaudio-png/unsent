@@ -91,7 +91,10 @@ nav.top .wrap{display:flex;align-items:center;justify-content:space-between;heig
 .links a.talk:hover{background:#000}
 
 /* hero: a wall of cover art drifting in tilted columns, with the white 3D logo floating over it */
-.wall{position:relative;height:100vh;height:100dvh;min-height:560px;overflow:hidden;background:#141416;isolation:isolate}
+.wall{position:relative;height:100vh;height:100dvh;min-height:560px;overflow:hidden;background:#000;isolation:isolate}
+.wall:not(.shown) .tile,.wall:not(.shown) .pick{opacity:0}
+.wall.shown .tile{transition:opacity 1.4s ease var(--dl,0s),transform .6s var(--ease),filter .4s,box-shadow .6s}
+.wall.shown .pick{transition:opacity 1s ease 1.2s}
 .cols{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
 .col{display:flex;flex:none;width:max-content;animation:drift var(--d,70s) linear infinite;will-change:transform}
 .col:nth-child(even){animation-direction:reverse}
@@ -570,22 +573,36 @@ function mmss(ms){if(!ms)return '';var s=Math.round(ms/1000);return Math.floor(s
 var lastKey='';
 /* exactly four full rows: the tile size is a quarter of the wall's height */
 function layout(){var w=innerWidth,h=wall.clientHeight||innerHeight,t=h/4;return {t:t,rows:4,per:Math.ceil(w/t)+1}}
+/* one tile per cover: songs from the same album share a cover, so the wall shows it once and plays the album's first song */
+var COVERS=[],SONG_C=[];
+function coverKey(u){var m=String(u).match(/i\.scdn\.co\/image\/ab67616d0000[0-9a-f]{4}([0-9a-f]+)/);return m?m[1]:String(u)}
+function groupCovers(){var seen={};COVERS=[];SONG_C=[];SONGS.forEach(function(s,i){var k=coverKey(s.cover);if(seen[k]===undefined){seen[k]=COVERS.length;COVERS.push({cover:s.cover,i:i})}SONG_C[i]=seen[k]})}
 function build(){
- if(!SONGS.length)return;var L=layout(),n=SONGS.length,h='';lastKey=L.t+'x'+L.rows+'x'+L.per;
- for(var r=0;r<L.rows;r++){var len=Math.max(L.per,Math.min(n,L.per+3)),list=[];for(var q=0;q<len;q++)list.push((r*5+q*(r%2?3:1)+r)%n);
-  var one=function(hidden){return list.map(function(i){var s=SONGS[i];return '<button class="tile" type="button" data-i="'+i+'"'+(hidden?' tabindex="-1" aria-hidden="true"':' aria-label="Play '+esc(s.title)+' by '+esc(s.artist)+'"')+'><img src="'+esc(s.cover)+'" alt="" loading="lazy" decoding="async"></button>'}).join('')};
-  h+='<div class="col" style="--d:'+(len*9+r%3*7)+'s;animation-delay:-'+(r*5.7)+'s">'+one(false)+one(true)+'</div>'}
- cols.style.setProperty('--t',L.t+'px');cols.innerHTML=h}
+ if(!COVERS.length)return;var L=layout(),n=COVERS.length,rows=[],h='';lastKey=L.t+'x'+L.rows+'x'+L.per;
+ /* deal the covers out across the rows; a row only borrows a cover (one not in it or its neighbours) when there are too few to fill the screen */
+ for(var r=0;r<L.rows;r++)rows.push([]);
+ for(var c=0;c<n;c++)rows[c%L.rows].push(c);
+ rows.forEach(function(row,r){
+  /* first covers from rows further away, then from neighbouring rows, and only if the row still is short, a repeat within the row */
+  [function(c){return row.indexOf(c)<0&&(rows[r-1]||[]).indexOf(c)<0&&(rows[r+1]||[]).indexOf(c)<0},function(c){return row.indexOf(c)<0},function(){return true}].forEach(function(ok){
+   for(var k=0;k<n&&row.length<L.per;k++){var c=(r*7+k)%n;if(ok(c))row.push(c)}})});
+ rows.forEach(function(row,r){
+  var one=function(hidden){return row.map(function(c,q){var s=SONGS[COVERS[c].i];return '<button class="tile" type="button" data-i="'+COVERS[c].i+'" data-c="'+c+'" style="--dl:'+((r*.13+q*.17)%.9).toFixed(2)+'s"'+(hidden?' tabindex="-1" aria-hidden="true"':' aria-label="Play '+esc(s.title)+' by '+esc(s.artist)+'"')+'><img src="'+esc(COVERS[c].cover)+'" alt="" decoding="async"></button>'}).join('')};
+  h+='<div class="col" style="--d:'+(row.length*9+r%3*7)+'s;animation-delay:-'+(r*5.7)+'s">'+one(false)+one(true)+'</div>'});
+ cols.style.setProperty('--t',L.t+'px');cols.innerHTML=h;reveal()}
+/* entrance: the logo appears on black first, then the covers fade in */
+var introDone=false,t0=Date.now();
+function reveal(){var wait=Math.max(0,(reduce||root.classList.contains('nogl')?300:2100)-(Date.now()-t0));setTimeout(function(){wall.classList.add('shown')},wait)}
 var rz;addEventListener('resize',function(){clearTimeout(rz);rz=setTimeout(function(){var L=layout();if(L.t+'x'+L.rows+'x'+L.per!==lastKey)build()},200)});
 /* a cover that fails to load gets a stand-in */
 cols.addEventListener('error',function(e){var t=e.target;if(t.tagName==='IMG'){var i=+t.parentNode.dataset.i;t.src=SONGS[i].cover=sampleCover(i)}},true);
 
-function useList(list){SONGS=list;build()}
-fetch('/api/playlist').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){
- if(!j.tracks||!j.tracks.length)throw 0;
+function useList(list){SONGS=list;groupCovers();build()}
+fetch('/api/playlist').then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(j){
+ if(!j.tracks||!j.tracks.length)throw new Error(j.error||'empty playlist');
  useList(j.tracks.map(function(t){var cr=CREDITS[t.id]||[['Production','Ros-e']];if(t.duration&&!CREDITS[t.id])cr=cr.concat([['Length',mmss(t.duration)]]);
   return {title:t.title,artist:t.artist,spotify:t.id,cover:t.cover||'',credits:cr}}).concat(EXTRA.map(function(e){return Object.assign({cover:ytCover(e.yt)},e)})))
-}).catch(function(){useList(EXTRA.map(function(e,i){return Object.assign({cover:sampleCover(i+5),sample:true},e)}).concat(samples()))});
+}).catch(function(err){console.warn('Spotify playlist not loaded, showing sample covers',err);useList(EXTRA.map(function(e,i){return Object.assign({cover:sampleCover(i+5),sample:true},e)}).concat(samples()))});
 
 /* Spotify's iFrame API lets the page start the song right after the click; a plain embed is the fallback */
 function spotifyApi(cb){
@@ -634,7 +651,7 @@ function close(){
  flipFrom(curTile,$('npArt'),true);np.classList.remove('on');d.body.classList.remove('playing');
  dispatchEvent(new Event('np:close'));
  setTimeout(function(){np.hidden=true;wall.classList.remove('frozen');root.style.overflow='';var a=$('npArt');a.style.transition='none';a.style.transform='';a.style.borderRadius='';if(curTile)curTile.focus({preventScroll:true})},reduce?0:560)}
-function step(k){if(!SONGS.length)return;var n=(cur+k+SONGS.length)%SONGS.length;curTile=cols.querySelector('.tile[data-i="'+n+'"]:not([aria-hidden])');fill(n,true)}
+function step(k){if(!SONGS.length)return;var n=(cur+k+SONGS.length)%SONGS.length;curTile=cols.querySelector('.tile[data-c="'+SONG_C[n]+'"]:not([aria-hidden])');fill(n,true)}
 cols.addEventListener('click',function(e){var t=e.target.closest('.tile');if(t)open(+t.dataset.i,t)});
 $('npX').addEventListener('click',close);$('home').addEventListener('click',close);
 $('npPrev').addEventListener('click',function(){step(-1)});$('npNext').addEventListener('click',function(){step(1)});
@@ -679,7 +696,7 @@ const letters=PTS.map((subs,i)=>{
  group.add(m);return m});
 const tanH=Math.tan(THREE.MathUtils.degToRad(6));
 function fit(){vw=innerWidth;vh=innerHeight;renderer.setSize(vw,vh,false);camera.aspect=vw/vh;
- const frac=vw<700?.78:vw<1100?.6:.5;camZ=Math.max((W/frac)/(2*tanH*camera.aspect),(H*2.4)/(2*tanH));
+ const frac=vw<700?.62:vw<1100?.46:.38;camZ=Math.max((W/frac)/(2*tanH*camera.aspect),(H*2.4)/(2*tanH));
  camera.position.set(0,0,camZ);camera.lookAt(0,0,0);camera.updateProjectionMatrix();kick()}
 addEventListener('resize',fit);
 
